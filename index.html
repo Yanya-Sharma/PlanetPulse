@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanetPulse — Carbon Footprint Tracker</title>
+    <meta name="description" content="Turn daily choices into a visible carbon footprint. Track activities, set weekly budgets, and mitigate emissions.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation / Header -->
+        <header class="app-header" data-testid="app-header">
+            <div class="brand-section">
+                <div class="brand-logo" aria-label="PlanetPulse Logo">🌱</div>
+                <div>
+                    <h1 class="brand-title">PlanetPulse</h1>
+                    <p class="brand-subtitle">Climate Tech • Carbon Footprint Intelligence</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span class="track-badge">Climate Tech Track</span>
+                <button id="theme-toggle-btn" class="btn btn-secondary btn-sm" data-testid="theme-toggle-btn" aria-label="Toggle dark/light theme">
+                    ☀️ Light Mode
+                </button>
+            </div>
+        </header>
+
+        <!-- Stat Overview (Feature 3: Dashboard Totals) -->
+        <section class="stats-grid" data-testid="stats-overview-grid">
+            <div class="stat-card" data-testid="card-stat-total">
+                <div class="stat-icon">🌍</div>
+                <div class="stat-info">
+                    <div class="stat-label">Total Footprint</div>
+                    <div class="stat-value" id="stat-total-co2" data-testid="stat-total-co2">0.0 kg</div>
+                    <div class="stat-desc">Cumulative logged emissions</div>
+                </div>
+            </div>
+            <div class="stat-card" data-testid="card-stat-week">
+                <div class="stat-icon">📅</div>
+                <div class="stat-info">
+                    <div class="stat-label">Active Week CO₂</div>
+                    <div class="stat-value" id="stat-week-co2" data-testid="stat-week-co2">0.0 kg</div>
+                    <div class="stat-desc">ISO cycle (Mon – Sun)</div>
+                </div>
+            </div>
+            <div class="stat-card" data-testid="card-stat-activities">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <div class="stat-label">Activities Logged</div>
+                    <div class="stat-value" id="stat-activities-count" data-testid="stat-activities-count">0</div>
+                    <div class="stat-desc">Verified daily entries</div>
+                </div>
+            </div>
+            <div class="stat-card" data-testid="card-stat-trees">
+                <div class="stat-icon">🌲</div>
+                <div class="stat-info">
+                    <div class="stat-label">Offset Required</div>
+                    <div class="stat-value" id="stat-trees-offset" data-testid="stat-trees-offset">0 trees</div>
+                    <div class="stat-desc">Tree-years of carbon capture</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature 4 & Decision Points 1, 3: Weekly Target, Burn Rate & Nudge -->
+        <section class="card weekly-target-card" data-testid="weekly-target-card">
+            <div class="card-header">
+                <h2 class="card-title">🎯 Weekly Target & Burn-Rate</h2>
+                <div id="pace-indicator-badge" class="badge badge-healthy" data-testid="pace-indicator-badge">
+                    Calculating pace...
+                </div>
+            </div>
+
+            <div class="target-header-stats">
+                <div class="target-num-group">
+                    <span class="target-small-label">Week Carbon Budget</span>
+                    <span id="target-display-value" class="target-big-value" data-testid="target-display-value">50.0 kg CO₂</span>
+                </div>
+                <div class="target-num-group" style="text-align: right;">
+                    <span class="target-small-label">Consumed This Week</span>
+                    <span id="week-used-display" class="target-big-value" data-testid="week-used-display">0.0 kg (0%)</span>
+                </div>
+            </div>
+
+            <!-- Progress Track with DP3 Pace Marker -->
+            <div class="progress-bar-wrapper">
+                <div class="progress-track" aria-label="Weekly carbon budget progress">
+                    <div id="target-progress-bar" class="progress-bar-fill healthy" data-testid="target-progress-bar" style="width: 0%;"></div>
+                </div>
+                <!-- DP3 Pace Line Marker indicates ideal expected pace for current day of week -->
+                <div id="pace-line-marker" class="pace-line-marker" data-testid="pace-line-marker" title="Day Pace Marker"></div>
+            </div>
+
+            <div class="pace-caption-row">
+                <span>0 kg (Start of Week)</span>
+                <span style="font-style: italic;">White line indicates expected burn-rate for today (DP3)</span>
+                <span>Target Limit</span>
+            </div>
+
+            <!-- Target Adjust Form -->
+            <form id="weekly-target-form" class="target-adjust-form" data-testid="weekly-target-form" style="display: flex; gap: 10px; margin-top: 18px; align-items: center; max-width: 420px;">
+                <label for="weekly-target-input" style="margin-bottom: 0; white-space: nowrap;">Set Target:</label>
+                <div class="input-with-unit" style="flex: 1;">
+                    <input type="number" id="weekly-target-input" data-testid="weekly-target-input" min="1" max="10000" step="0.5" value="50.0" required>
+                    <span class="unit-addon">kg CO₂</span>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm" data-testid="set-target-btn">Update</button>
+            </form>
+
+            <!-- DP1: The Nudge Banner Container (Dynamically rendered based on budget state) -->
+            <div id="nudge-banner-container" data-testid="nudge-banner-container">
+                <!-- Injected by app.js -->
+            </div>
+        </section>
+
+        <!-- Main Workspace Grid: Log Activity (Left) + Breakdown Dashboard (Right) -->
+        <div class="dashboard-grid">
+            <!-- Feature 1 & 2: Log an Activity Form -->
+            <section class="card" data-testid="log-activity-section">
+                <div class="card-header">
+                    <h2 class="card-title">📝 Log an Activity</h2>
+                    <span class="text-muted" style="font-size: 0.78rem;">Feature 1 & 2</span>
+                </div>
+
+                <form id="log-activity-form" data-testid="log-activity-form">
+                    <div class="form-group">
+                        <label for="activity-type-select">Activity Type</label>
+                        <select id="activity-type-select" data-testid="activity-type-select" required>
+                            <option value="car">🚗 Car Travel (0.20 kg CO₂/km)</option>
+                            <option value="bus">🚌 Bus Transit (0.08 kg CO₂/km)</option>
+                            <option value="flight">✈️ Flight Travel (0.25 kg CO₂/km)</option>
+                            <option value="electricity">⚡ Electricity Consumption (0.80 kg CO₂/kWh)</option>
+                            <option value="veg_meal">🥗 Vegetarian Meal (0.50 kg CO₂/meal)</option>
+                            <option value="non_veg_meal">🥩 Non-Vegetarian Meal (2.00 kg CO₂/meal)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="activity-quantity-input">Quantity</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="activity-quantity-input" data-testid="activity-quantity-input" min="0.01" step="any" placeholder="e.g. 15" required>
+                                <span id="activity-unit-label" class="unit-addon" data-testid="activity-unit-label">km</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="activity-date-input">Date</label>
+                            <input type="date" id="activity-date-input" data-testid="activity-date-input" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="activity-note-input">Optional Note / Context</label>
+                        <input type="text" id="activity-note-input" data-testid="activity-note-input" placeholder="e.g. Commute to office, groceries, flight to conference">
+                    </div>
+
+                    <!-- Instant Calculation Preview (Feature 2) -->
+                    <div class="preview-callout" data-testid="calc-preview-callout">
+                        <span class="preview-label">Calculated Footprint:</span>
+                        <span id="activity-calc-preview" class="preview-value" data-testid="activity-calc-preview">0.00 kg CO₂</span>
+                    </div>
+
+                    <button type="submit" id="activity-submit-btn" class="btn btn-primary btn-block" data-testid="activity-submit-btn">
+                        Record Activity
+                    </button>
+                </form>
+
+                <!-- Fixed Factors Reference Table -->
+                <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-color);">
+                    <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">
+                        Fixed Conversion Factors (Brief Spec)
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.76rem; color: var(--text-muted);">
+                        <div>• Car: <strong>0.20 kg / km</strong></div>
+                        <div>• Bus: <strong>0.08 kg / km</strong></div>
+                        <div>• Flight: <strong>0.25 kg / km</strong></div>
+                        <div>• Electricity: <strong>0.80 kg / kWh</strong></div>
+                        <div>• Veg Meal: <strong>0.50 kg / meal</strong></div>
+                        <div>• Non-Veg Meal: <strong>2.00 kg / meal</strong></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feature 3: Category Breakdown & Interactive Visualization -->
+            <section class="card" data-testid="breakdown-section">
+                <div class="card-header">
+                    <h2 class="card-title">🍩 Emission Breakdown</h2>
+                    <span class="text-muted" style="font-size: 0.78rem;">By Category</span>
+                </div>
+
+                <div class="breakdown-layout">
+                    <div class="canvas-container">
+                        <canvas id="breakdown-canvas" width="240" height="240" data-testid="breakdown-canvas" aria-label="Carbon emission breakdown donut chart"></canvas>
+                    </div>
+                    <div id="category-breakdown-list" class="category-breakdown-list" data-testid="category-breakdown-list">
+                        <!-- Rendered by app.js -->
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Feature 5: History & Filter -->
+        <section class="card history-section" data-testid="history-section">
+            <div class="card-header">
+                <h2 class="card-title">📜 Logged Activities History</h2>
+                <span id="history-count-badge" class="badge badge-healthy" data-testid="history-count-badge">0 records</span>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="filter-toolbar" data-testid="filter-toolbar">
+                <div class="form-group">
+                    <label for="filter-type">Filter by Category</label>
+                    <select id="filter-type" data-testid="filter-type">
+                        <option value="all">All Categories</option>
+                        <option value="car">🚗 Car Travel</option>
+                        <option value="bus">🚌 Bus Transit</option>
+                        <option value="flight">✈️ Flight Travel</option>
+                        <option value="electricity">⚡ Electricity</option>
+                        <option value="veg_meal">🥗 Vegetarian Meal</option>
+                        <option value="non_veg_meal">🥩 Non-Vegetarian Meal</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-date">Filter by Date Range</label>
+                    <select id="filter-date" data-testid="filter-date">
+                        <option value="all">All Dates</option>
+                        <option value="today">Today Only</option>
+                        <option value="this_week">This Active Week</option>
+                        <option value="this_month">This Month</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1.5;">
+                    <label for="filter-search">Search by Note / Keyword</label>
+                    <input type="text" id="filter-search" data-testid="filter-search" placeholder="Type to search entries...">
+                </div>
+                <div style="display: flex; gap: 8px; align-self: flex-end;">
+                    <button id="export-csv-btn" class="btn btn-secondary btn-sm" data-testid="export-csv-btn" title="Export as CSV file">
+                        📥 CSV
+                    </button>
+                    <button id="export-json-btn" class="btn btn-secondary btn-sm" data-testid="export-json-btn" title="Export as JSON file">
+                        📥 JSON
+                    </button>
+                    <button id="reset-demo-data-btn" class="btn btn-outline btn-sm" data-testid="reset-demo-data-btn" title="Reset sample dataset">
+                        🔄 Reset Demo Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Activities Table -->
+            <div class="table-responsive">
+                <table id="history-table" data-testid="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Quantity</th>
+                            <th>CO₂ Footprint</th>
+                            <th>Note / Context</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body" data-testid="history-table-body">
+                        <!-- Injected by app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- DP2: Absurd Input Diagnostic Modal -->
+    <div id="absurd-input-modal" class="modal-backdrop hidden" data-testid="absurd-input-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-dialog">
+            <h3 id="modal-title" class="modal-title">⚠️ Plausibility Verification (DP2)</h3>
+            <div id="absurd-modal-message" class="modal-body" data-testid="absurd-modal-message">
+                <!-- Injected by app.js -->
+            </div>
+            <label class="override-checkbox-label">
+                <input type="checkbox" id="modal-override-confirm-cb" data-testid="modal-override-confirm-cb">
+                <span>I confirm this is an intentional aggregate / enterprise entry.</span>
+            </label>
+            <div class="modal-footer">
+                <button id="modal-cancel-btn" class="btn btn-secondary btn-sm" data-testid="modal-cancel-btn">Cancel & Edit</button>
+                <button id="modal-auto-correct-btn" class="btn btn-outline btn-sm" data-testid="modal-auto-correct-btn">Auto-Correct Value</button>
+                <button id="modal-override-btn" class="btn btn-primary btn-sm" data-testid="modal-override-btn">Confirm Override</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Non-intrusive Toast Notifications -->
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
