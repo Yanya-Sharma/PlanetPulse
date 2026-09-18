@@ -1,5 +1,7 @@
 # 🌍 PlanetPulse
 
+Hackathon ID: AZIS-HSDMHX
+
 > A modern, interactive climate-tech dashboard designed to help users understand and track their environmental impact through clear data, intelligent insights, and an elegant user experience.
 
 ## ✨ Features
